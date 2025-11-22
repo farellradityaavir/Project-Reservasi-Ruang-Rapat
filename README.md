@@ -1,59 +1,260 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SISTEM RESERVASI RUANG RAPAT
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 📋 Daftar Isi
+1. [Skema Basis Data](#-skema-basis-data)
+2. [Alur Logika Sistem](#-alur-logika-sistem)
+3. [Dokumentasi AI](#-dokumentasi-ai)
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🗃️ Skema Basis Data
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Database: `db_ruangrapat`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+#### 1. 🧑‍🤝‍🧑 Tabel: `users` (Pengguna)
+Menyimpan informasi pengguna yang berhak melakukan reservasi.
 
-## Learning Laravel
+**Struktur Tabel:**
+| Field | Type | Keterangan |
+|-------|------|------------|
+| `id` | BIGINT UNSIGNED | **Primary Key**, pengenal unik |
+| `email` | VARCHAR | Unik, untuk login dan identifikasi |
+| `name` | VARCHAR | Nama lengkap pengguna |
+| `password` | VARCHAR | Hash kata sandi |
+| `role` | ENUM('admin','user') | Peran pengguna (default: 'user') |
+| `created_at` | TIMESTAMP | Waktu pembuatan data |
+| `updated_at` | TIMESTAMP | Waktu pembaruan data |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+#### 2. 🏢 Tabel: `rooms` (Ruangan)
+Berisi daftar ruangan rapat yang tersedia untuk dipesan.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**Struktur Tabel:**
+| Field | Type | Keterangan |
+|-------|------|------------|
+| `id` | BIGINT UNSIGNED | **Primary Key**, pengenal unik ruangan |
+| `name` | VARCHAR | Nama ruangan (contoh: 'Ruang Rapat A - Creative') |
+| `capacity` | INT UNSIGNED | Kapasitas maksimum ruangan |
+| `location` | VARCHAR | Lokasi ruangan (contoh: 'Lantai 2 - Gedung Kreatif') |
+| `description` | TEXT | Deskripsi fasilitas ruangan |
+| `image_path` | VARCHAR | Path file gambar ruangan |
+| `image_alt` | VARCHAR | Deskripsi gambar ruangan |
+| `created_at` | TIMESTAMP | Waktu pembuatan data |
+| `updated_at` | TIMESTAMP | Waktu pembaruan data |
 
-## Laravel Sponsors
+#### 3. 🗓️ Tabel: `reservations` (Pemesanan)
+Mencatat setiap permintaan pemesanan ruangan.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Struktur Tabel:**
+| Field | Type | Keterangan |
+|-------|------|------------|
+| `id` | BIGINT UNSIGNED | **Primary Key** |
+| `user_id` | BIGINT UNSIGNED | **Foreign Key** → `users.id` (pemesan) |
+| `room_id` | BIGINT UNSIGNED | **Foreign Key** → `rooms.id` (ruangan) |
+| `date` | DATE | Tanggal pemesanan |
+| `start_time` | TIME | Waktu mulai pemakaian |
+| `end_time` | TIME | Waktu selesai pemakaian |
+| `purpose` | TEXT | Tujuan/keperluan pemesanan |
+| `status` | ENUM('active','cancelled') | Status pemesanan (default: 'active') |
+| `created_at` | TIMESTAMP | Waktu pembuatan data |
+| `updated_at` | TIMESTAMP | Waktu pembaruan data |
 
-### Premium Partners
+**Relasi dan Constraints:**
+- `ON DELETE CASCADE` pada foreign keys
+- Data pemesanan terhapus otomatis jika user/room dihapus
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🔄 Alur Logika Sistem
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Validasi Konflik Jadwal
 
-## Code of Conduct
+Sistem mencegah konflik reservasi dengan mengecek tumpang tindih jadwal pada ruangan yang sama.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### 🎯 Logika Deteksi Konflik
+Konflik terjadi jika:
+**Reservasi baru dimulai SEBELUM reservasi lama selesai, DAN**
+**Reservasi baru berakhir SETELAH reservasi lama dimulai**
 
-## Security Vulnerabilities
+#### 📊 Contoh Skenario Konflik
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Reservasi Sistem | Reservasi Baru | Status |
+|------------------|----------------|---------|
+| 10:00–11:00 | 10:30–11:30 | ❌ **Bentrok** |
+| 10:00–11:00 | 09:00–10:00 | ✅ Tidak bentrok |
+| 10:00–11:00 | 11:00–12:00 | ✅ Tidak bentrok |
+| 10:00–11:00 | 09:30–10:30 | ❌ **Bentrok** |
 
-## License
+#### 💻 Implementasi Kode (Laravel)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```php
+$conflict = Reservation::where('room_id', $request->room_id)
+    ->where(function ($query) use ($start, $end) {
+        $query->where('start_time', '<', $end)
+              ->where('end_time', '>', $start);
+    })
+    ->exists();
+
+if ($conflict) {
+    return back()->withErrors(['msg' => 'Ruangan sudah dipesan pada waktu tersebut.'])->withInput();
+}
+```
+
+#### 🔍 Penjelasan Kode:
+- `where('room_id', $request->room_id)` - Cek hanya pada ruangan yang sama
+- `start_time < end` - Awal reservasi baru sebelum jadwal lama berakhir
+- `end_time > start` - Akhir reservasi baru setelah jadwal lama dimulai
+
+#### ✅ Kesimpulan
+Logika ini memastikan:
+- Tidak terjadi double booking
+- Data reservasi konsisten
+- Jadwal ruang rapat tertata rapi
+
+---
+
+## 🤖 Dokumentasi AI
+
+### Platform AI yang Digunakan:
+- **ChatGPT & Gemini** - Backend development & analisis
+- **Claude** - Frontend development & tampilan
+- **Amazon** - Debugging & problem solving
+
+### 📋 Strategi Prompt Engineering
+
+#### 1. 🎯 PERENCANAAN AWAL
+**Prompt:**
+```
+"Buat analisis rancangan lengkap sistem reservasi ruang rapat dengan spesifikasi:
+- Role: User & Admin
+- Fitur: Lihat ruang, reservasi, batalkan reservasi, riwayat
+- Teknis: Laravel, MySQL, GUI, validasi bentrok jadwal
+- Tema: Corporate merah-putih
+Beri struktur database dan alur sistem"
+```
+
+**Hasil:** Analisis requirement, database schema, user flow diagram, teknologi stack
+
+#### 2. ⚙️ IMPLEMENTASI BACKEND
+**Prompt:**
+```
+"Buat struktur project Laravel lengkap untuk sistem reservasi dengan:
+- Models: User, Room, Reservation
+- Controllers dengan middleware
+- Migrations & relationships
+- Validasi reservasi (bentrok jadwal, jam kerja)
+Sertakan kode lengkap setiap file"
+```
+
+**File yang Dihasilkan:**
+- `User.php`, `Room.php`, `Reservation.php`
+- `AuthController.php`, `AdminController.php`
+- Migrations dengan foreign keys
+- Middleware role-based
+
+#### 3. 🎨 IMPLEMENTASI FRONTEND
+**Prompt:**
+```
+"Rombak seluruh tampilan dengan tema corporate putih-merah yang aesthetic professional:
+- Layout konsisten untuk semua halaman
+- CSS terstruktur dengan design system
+- Komponen reusable
+- Responsive design
+- Animasi smooth"
+```
+
+**Komponen yang Dibuat:**
+- Layout utama & admin
+- CSS variables system
+- Component classes
+- Responsive breakpoints
+- Hover animations
+
+#### 4. 🔗 INTEGRASI FULL-STACK
+**Prompt:**
+```
+"Integrasikan semua bagian menjadi sistem yang utuh:
+- Sesuaikan backend dengan frontend
+- Pastikan konsistensi design
+- Fix error dan bug
+- Optimasi performance
+- Testing flow lengkap"
+```
+
+### 🚀 Best Practices Prompt Engineering
+
+#### ✅ DO's:
+- **Spesifik & Terstruktur**
+  ```
+  ✅ "Buat sistem reservasi ruang rapat dengan fitur X, Y, Z menggunakan teknologi A, B, C"
+  ```
+
+- **Bertahap & Modular**
+  ```
+  1. "Analisis kebutuhan dan buat database design"
+  2. "Implementasi backend dengan Laravel"
+  3. "Buat frontend dengan design system"
+  4. "Integrasikan dan testing"
+  ```
+
+- **Contoh Kode Lengkap**
+  ```
+  "Sertakan kode lengkap untuk Model User dengan:
+  - Fillable attributes
+  - Relationships
+  - Custom methods
+  - Validation rules"
+  ```
+
+#### ❌ DON'Ts:
+- Request terlalu umum
+- Gabungkan banyak fitur dalam satu prompt
+- Asumsi pengetahuan AI
+- Lupakan testing instructions
+
+### 📝 Template Prompt Standard
+
+#### Untuk Fitur Baru:
+```
+"Buat [nama fitur] untuk sistem reservasi dengan:
+- Deskripsi: [jelaskan fungsionalitas]
+- Teknologi: [Laravel/MySQL/Blade]
+- Requirements: [spesifik kebutuhan]
+- Integration: [bagaimana terhubung dengan existing system]
+Beri kode lengkap dan penjelasan implementasi"
+```
+
+#### Untuk Debugging:
+```
+"Error Analysis:
+- Error: [paste error]
+- File: [file path]
+- Context: [apa yang dilakukan saat error]
+Request: Analisis root cause dan berikan fix lengkap"
+```
+
+### 🏆 Hasil Capaian
+
+#### ✅ Fitur Sistem:
+- Authentication system
+- Role-based access control
+- Room management
+- Reservation dengan validasi konflik
+- Admin dashboard
+- Responsive design
+- Professional UI/UX
+
+#### 🛠️ Tech Stack:
+- Laravel 10 + MySQL
+- Blade templating
+- Custom CSS design system
+- Font Awesome icons
+- Responsive grid layout
+
+#### 📊 Kualitas Kode:
+- Clean architecture
+- Consistent naming
+- Proper error handling
+- Security implemented
+- Performance optimized
+
+---
