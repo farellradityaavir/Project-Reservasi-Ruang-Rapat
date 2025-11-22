@@ -4,6 +4,109 @@
 1. [Skema Basis Data](#-skema-basis-data)
 2. [Alur Logika Sistem](#-alur-logika-sistem)
 3. [Dokumentasi AI](#-dokumentasi-ai)
+4. [Instalasi & Menjalankan Aplikasi](#-instalasi--menjalankan-aplikasi)
+
+---
+
+## 🚀 Instalasi & Menjalankan Aplikasi
+
+### Prasyarat Sistem
+- PHP 8.0 atau lebih tinggi
+- Composer
+- MySQL
+- Node.js (opsional untuk assets)
+
+### Langkah-langkah Instalasi
+
+#### 1. Clone dan Persiapan Project
+```bash
+# Clone repository
+git clone [repository-url]
+cd sistem-reservasi-ruang-rapat
+
+# Install dependencies PHP
+composer install
+
+# Install dependencies Node.js (jika ada frontend assets)
+npm install
+```
+
+#### 2. Konfigurasi Environment
+```bash
+# Salin file environment
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+Edit file `.env` dan sesuaikan dengan konfigurasi database:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=db_ruangrapat
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+#### 3. Setup Database
+```bash
+# Jalankan migrations dan seeders
+php artisan migrate:fresh --seed
+```
+
+#### 4. Menjalankan Aplikasi
+```bash
+# Jalankan development server
+php artisan serve
+```
+
+Aplikasi akan berjalan di: `http://localhost:8000`
+
+### 🔐 Akun Default untuk Testing
+
+#### Administrator
+- **Email:** `admin@office.com`
+- **Password:** `password123`
+- **Role:** Admin
+- **Akses:** Full access ke semua fitur sistem
+
+#### User Biasa
+- **Email:** `user@office.com` 
+- **Password:** `password`
+- **Role:** User
+- **Akses:** Hanya bisa melakukan reservasi dan melihat riwayat
+
+#### User Tambahan (jika ada)
+- **Email:** `staff@office.com`
+- **Password:** `password`
+- **Role:** User
+
+### 📊 Data Sample yang Di-generate
+
+Setelah menjalankan `migrate:fresh --seed`, sistem akan memiliki:
+
+#### 🏢 Ruangan Rapat
+1. **Ruang Rapat A - Creative**
+   - Kapasitas: 20 orang
+   - Lokasi: Lantai 2 - Gedung Kreatif
+   - Fasilitas: LCD Projector, Whiteboard, AC
+
+2. **Ruang Rapat B - Executive**
+   - Kapasitas: 15 orang
+   - Lokasi: Lantai 3 - Gedung Utama
+   - Fasilitas: TV LED, Sound System, Video Conference
+
+3. **Ruang Rapat C - Meeting Room**
+   - Kapasitas: 10 orang
+   - Lokasi: Lantai 1 - Gedung Operasional
+   - Fasilitas: Whiteboard, AC
+
+#### 📅 Reservasi Sample
+- Beberapa data reservasi untuk testing
+- Konflik jadwal sudah di-handle oleh sistem
+- Data riwayat untuk demo fitur
 
 ---
 
@@ -204,13 +307,6 @@ Sertakan kode lengkap setiap file"
   - Custom methods
   - Validation rules"
   ```
-
-#### ❌ DON'Ts:
-- Request terlalu umum
-- Gabungkan banyak fitur dalam satu prompt
-- Asumsi pengetahuan AI
-- Lupakan testing instructions
-
 ### 📝 Template Prompt Standard
 
 #### Untuk Fitur Baru:
@@ -256,5 +352,37 @@ Request: Analisis root cause dan berikan fix lengkap"
 - Proper error handling
 - Security implemented
 - Performance optimized
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues & Solutions
+
+#### 1. Migration Error
+```bash
+# Jika ada error migration, reset dan jalankan lagi
+php artisan migrate:reset
+php artisan migrate:fresh --seed
+```
+
+#### 2. Composer Error
+```bash
+# Clear composer cache
+composer clear-cache
+composer install --no-cache
+```
+
+#### 3. Permission Error
+```bash
+# Set storage permission
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+```
+
+#### 4. Database Connection Error
+- Pastikan MySQL service berjalan
+- Cek konfigurasi di file `.env`
+- Pastikan database `db_ruangrapat` sudah dibuat
 
 ---
